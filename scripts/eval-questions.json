@@ -1,0 +1,22 @@
+[
+  { "question": "別人開車撞傷我，我可以請求賠償嗎？", "expect_law": "民法", "expect_article": "第184條" },
+  { "question": "加班費應該怎麼計算？", "expect_law": "勞動基準法", "expect_article": "第24條" },
+  { "question": "一天最多可以工作幾小時？", "expect_law": "勞動基準法", "expect_article": "第32條" },
+  { "question": "網路購物可以在幾天內無條件退貨？", "expect_law": "消費者保護法", "expect_article": "第19條" },
+  { "question": "房東可以隨便沒收押金嗎？", "expect_law": "租賃住宅市場發展及管理條例" },
+  { "question": "被公司資遣可以拿到多少資遣費？", "expect_law": "勞動基準法", "expect_article": "第17條" },
+  { "question": "對交通罰單不服可以怎麼救濟？", "expect_law": "道路交通管理處罰條例", "expect_article": "第87條" },
+  { "question": "樓上鄰居漏水到我家，管委會可以介入嗎？", "expect_law": "公寓大廈管理條例" },
+  { "question": "公司可以任意蒐集我的個人資料嗎？", "expect_law": "個人資料保護法" },
+  { "question": "對政府機關的處分不服，提起訴願有期限嗎？", "expect_law": "訴願法", "expect_article": "第14條" },
+  { "question": "小額訴訟的金額上限是多少？", "expect_law": "民事訴訟法", "expect_article": "第436條之8" },
+  { "question": "公務員執行職務造成我的損害，可以向國家求償嗎？", "expect_law": "國家賠償法", "expect_article": "第2條" },
+  { "question": "懷孕員工可以申請育嬰留職停薪嗎？", "expect_law": "性別平等工作法" },
+  { "question": "欠錢不還可以聲請強制執行嗎？", "expect_law": "強制執行法" },
+  { "question": "離婚後小孩的監護權如何決定？", "expect_law": "民法", "expect_article": "第1055條" },
+  { "question": "殺人罪會被判幾年？", "expect_refuse": true },
+  { "question": "吸毒被抓到會有什麼刑責？", "expect_refuse": true },
+  { "question": "今天台北天氣如何？", "expect_refuse": true },
+  { "question": "幫我推薦好吃的牛肉麵", "expect_refuse": true },
+  { "question": "竊盜罪的構成要件是什麼？", "expect_refuse": true }
+]

@@ -1,0 +1,146 @@
+[
+ {
+  "code": "B0000001",
+  "name": "民法",
+  "category": "civil",
+  "category_name": "民事權益",
+  "articles": 1374,
+  "lastUpdate": "20210120",
+  "url": "https://law.moj.gov.tw/LawClass/LawAll.aspx?pcode=B0000001"
+ },
+ {
+  "code": "J0170001",
+  "name": "消費者保護法",
+  "category": "civil",
+  "category_name": "民事權益",
+  "articles": 77,
+  "lastUpdate": "20150617",
+  "url": "https://law.moj.gov.tw/LawClass/LawAll.aspx?pcode=J0170001"
+ },
+ {
+  "code": "D0070118",
+  "name": "公寓大廈管理條例",
+  "category": "civil",
+  "category_name": "民事權益",
+  "articles": 66,
+  "lastUpdate": "20220511",
+  "url": "https://law.moj.gov.tw/LawClass/LawAll.aspx?pcode=D0070118"
+ },
+ {
+  "code": "I0050021",
+  "name": "個人資料保護法",
+  "category": "civil",
+  "category_name": "民事權益",
+  "articles": 65,
+  "lastUpdate": "20251111",
+  "url": "https://law.moj.gov.tw/LawClass/LawAll.aspx?pcode=I0050021"
+ },
+ {
+  "code": "B0010001",
+  "name": "民事訴訟法",
+  "category": "procedure",
+  "category_name": "程序救濟",
+  "articles": 695,
+  "lastUpdate": "20231129",
+  "url": "https://law.moj.gov.tw/LawClass/LawAll.aspx?pcode=B0010001"
+ },
+ {
+  "code": "A0030055",
+  "name": "行政程序法",
+  "category": "procedure",
+  "category_name": "程序救濟",
+  "articles": 174,
+  "lastUpdate": "20210120",
+  "url": "https://law.moj.gov.tw/LawClass/LawAll.aspx?pcode=A0030055"
+ },
+ {
+  "code": "A0030020",
+  "name": "訴願法",
+  "category": "procedure",
+  "category_name": "程序救濟",
+  "articles": 101,
+  "lastUpdate": "20120627",
+  "url": "https://law.moj.gov.tw/LawClass/LawAll.aspx?pcode=A0030020"
+ },
+ {
+  "code": "A0030154",
+  "name": "行政訴訟法",
+  "category": "procedure",
+  "category_name": "程序救濟",
+  "articles": 378,
+  "lastUpdate": "20220622",
+  "url": "https://law.moj.gov.tw/LawClass/LawAll.aspx?pcode=A0030154"
+ },
+ {
+  "code": "B0010004",
+  "name": "強制執行法",
+  "category": "procedure",
+  "category_name": "程序救濟",
+  "articles": 178,
+  "lastUpdate": "20190529",
+  "url": "https://law.moj.gov.tw/LawClass/LawAll.aspx?pcode=B0010004"
+ },
+ {
+  "code": "I0020004",
+  "name": "國家賠償法",
+  "category": "procedure",
+  "category_name": "程序救濟",
+  "articles": 17,
+  "lastUpdate": "20191218",
+  "url": "https://law.moj.gov.tw/LawClass/LawAll.aspx?pcode=I0020004"
+ },
+ {
+  "code": "N0030001",
+  "name": "勞動基準法",
+  "category": "labor",
+  "category_name": "勞動職場",
+  "articles": 98,
+  "lastUpdate": "20240731",
+  "url": "https://law.moj.gov.tw/LawClass/LawAll.aspx?pcode=N0030001"
+ },
+ {
+  "code": "N0090001",
+  "name": "就業服務法",
+  "category": "labor",
+  "category_name": "勞動職場",
+  "articles": 84,
+  "lastUpdate": "20250120",
+  "url": "https://law.moj.gov.tw/LawClass/LawAll.aspx?pcode=N0090001"
+ },
+ {
+  "code": "N0030014",
+  "name": "性別平等工作法",
+  "category": "labor",
+  "category_name": "勞動職場",
+  "articles": 49,
+  "lastUpdate": "20230816",
+  "url": "https://law.moj.gov.tw/LawClass/LawAll.aspx?pcode=N0030014"
+ },
+ {
+  "code": "K0040012",
+  "name": "道路交通管理處罰條例",
+  "category": "life",
+  "category_name": "生活家事",
+  "articles": 127,
+  "lastUpdate": "20260114",
+  "url": "https://law.moj.gov.tw/LawClass/LawAll.aspx?pcode=K0040012"
+ },
+ {
+  "code": "D0060125",
+  "name": "租賃住宅市場發展及管理條例",
+  "category": "life",
+  "category_name": "生活家事",
+  "articles": 48,
+  "lastUpdate": "20230208",
+  "url": "https://law.moj.gov.tw/LawClass/LawAll.aspx?pcode=D0060125"
+ },
+ {
+  "code": "B0010048",
+  "name": "家事事件法",
+  "category": "life",
+  "category_name": "生活家事",
+  "articles": 200,
+  "lastUpdate": "20230621",
+  "url": "https://law.moj.gov.tw/LawClass/LawAll.aspx?pcode=B0010048"
+ }
+]
