@@ -144,12 +144,12 @@ export async function retrieve(question: string): Promise<RetrievalResult> {
   // 合併：條號直達置頂 → 關鍵詞命中 → 向量結果；去重、總量上限 10
   const seen = new Set<string>();
   const merged: RetrievedArticle[] = [];
-  for (const a of [...directRows, ...kwRows, ...vecRows]) {
+  for (const a of [...directRows, ...vecRows, ...kwRows]) {
     const key = `${a.law_name}|${a.article_no}|${a.content.slice(0, 30)}`;
     if (seen.has(key)) continue;
     seen.add(key);
     merged.push({ ...a, score: a.score === null ? undefined : Number(a.score) });
-    if (merged.length >= 10) break;
+    if (merged.length >= 12) break;
   }
 
   const refused = directRows.length === 0 && topScore < threshold;

@@ -50,7 +50,7 @@ export async function embed(texts: string[]): Promise<number[][]> {
 }
 
 // ---------- 生成（行協定） ----------
-const GEN_SYSTEM = `你是台灣法律資訊助理。你只能依據使用者提供的法條回答，嚴禁使用法條以外的知識或自行推測。
+const GEN_SYSTEM = `你是台灣法律資訊助理。全程以繁體中文思考與回答。你只能依據使用者提供的法條回答，嚴禁使用法條以外的知識或自行推測。
 以 JSON Lines 格式輸出：每行恰好一個 JSON 物件，禁止輸出陣列、markdown 圍欄或任何其他文字。行的種類：
 {"t":"s","text":"回答句（白話、一句一個重點）","cite":"民法第184條"}
 {"t":"step","name":"步驟名稱","cite":"民事訴訟法第436條之8","detail":"這一步要做什麼","condition":"進入此步驟的條件（可省略）"}
