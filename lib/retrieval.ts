@@ -99,10 +99,15 @@ export async function retrieve(question: string): Promise<RetrievalResult> {
     } catch (e) { console.error('[rewrite]', e); }
   }
 
-  const [qEmb] = await embed([searchText]);
+  // 一次呼叫取得兩個向量:改寫句用於條文檢索,原始問題用於領域路由
+  // (路由需要「房東、押金」這類日常詞彙訊號,改寫後的法律語言會誤導路由)
+  const needBoth = searchText !== question;
+  const embs = await embed(needBoth ? [searchText, question] : [searchText]);
+  const qEmb = embs[0];
+  const qEmbRoute = needBoth ? embs[1] : embs[0];
   const qVec = JSON.stringify(qEmb);
 
-  const categories = await routeCategories(qEmb);
+  const categories = await routeCategories(qEmbRoute);
 
   const vecRows = (await db`
     SELECT law_name, article_no, chapter_path, content,
@@ -126,7 +131,6 @@ export async function retrieve(question: string): Promise<RetrievalResult> {
         SELECT law_name, article_no, chapter_path, content, NULL::float AS score
         FROM articles
         WHERE content ILIKE ANY(${patterns})
-          AND (${categories.length === 0} OR category_name = ANY(${categories}))
         ORDER BY char_length(content) ASC
         LIMIT 5`) as RetrievedArticle[];
     }
@@ -144,12 +148,12 @@ export async function retrieve(question: string): Promise<RetrievalResult> {
   // 合併：條號直達置頂 → 關鍵詞命中 → 向量結果；去重、總量上限 10
   const seen = new Set<string>();
   const merged: RetrievedArticle[] = [];
-  for (const a of [...directRows, ...vecRows, ...kwRows]) {
+  for (const a of [...directRows, ...kwRows, ...vecRows]) {
     const key = `${a.law_name}|${a.article_no}|${a.content.slice(0, 30)}`;
     if (seen.has(key)) continue;
     seen.add(key);
     merged.push({ ...a, score: a.score === null ? undefined : Number(a.score) });
-    if (merged.length >= 12) break;
+    if (merged.length >= 10) break;
   }
 
   const refused = directRows.length === 0 && topScore < threshold;
