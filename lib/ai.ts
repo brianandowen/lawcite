@@ -93,7 +93,11 @@ async function generateStreamGemini(
     body: JSON.stringify({
       systemInstruction: { parts: [{ text: GEN_SYSTEM }] },
       contents: [{ role: 'user', parts: [{ text: buildGenUser(question, articles) }] }],
-      generationConfig: { temperature: 0.2, thinkingConfig: { includeThoughts: true } },
+      generationConfig: {
+        temperature: 0.2,
+        // 思考摘要僅 2.5 系列支援；2.0-flash 等非思考型模型不可帶此參數
+        ...(GEMINI_MODEL().includes('2.5') ? { thinkingConfig: { includeThoughts: true } } : {}),
+      },
     }),
   });
   if (!res.ok || !res.body) throw new Error(`Gemini ${res.status}: ${await res.text()}`);
@@ -205,6 +209,7 @@ const REWRITE_SYSTEM = `你是台灣法律檢索查詢改寫器。使用者的�
 例：「朋友欠錢不還」→「消費借貸借用人未依約返還借款之請求與給付遲延」
 例：「我的愛人佔用我的房間不搬走」→「所有物返還請求權與無權占有之排除遷讓」
 2. keywords：3~6 個「條文原文中會出現」的法律詞彙。例：["消費借貸","返還借款","給付遲延","催告","強制執行"]
+若問題與法律完全無關（天氣、美食、閒聊等），嚴禁強行法律化：直接回傳 {"query":"原問題原文","keywords":[]}。
 移除人名代號、金額、日期等細節。只輸出 JSON：{"query":"...","keywords":["..."]}`;
 
 export async function rewriteQuery(question: string): Promise<{ query: string; keywords: string[] }> {
