@@ -2,7 +2,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 
-const SAMPLES = ['房東不退押金怎麼辦？', '加班費怎麼算才合法？', '網購後悔可以退貨嗎？'];
+const SAMPLES = ['', '加班費怎麼算才合法？', '網購後悔可以退貨嗎？'];
 
 export default function HeroAsk() {
   const [q, setQ] = useState('');
@@ -18,7 +18,7 @@ export default function HeroAsk() {
           className="ask-input"
           value={q}
           onChange={(e) => setQ(e.target.value)}
-          placeholder="輸入你的法律問題，例如：房東不退押金怎麼辦？"
+          placeholder="輸入你的法律問題，"
           maxLength={300}
         />
         <button className="btn btn-primary" type="submit">提問</button>
