@@ -2,7 +2,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 
-const SAMPLES = ['房東不退押金怎麼辦？', '加班費怎麼算才合法？', '網購後悔可以退貨嗎？'];
+const SAMPLES = ['收到交通罰單不服怎麼救濟？', '加班費怎麼算才合法？', '網購後悔可以退貨嗎？'];
 
 export default function HeroAsk() {
   const [q, setQ] = useState('');
