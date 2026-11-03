@@ -1,14 +1,11 @@
 'use client';
-import { Suspense, useEffect, useRef, useState } from 'react';
-import Link from 'next/link';
-import { useSearchParams } from 'next/navigation';
+import { useEffect, useRef, useState } from 'react';
 import { DEADLINES } from '@/lib/deadlines';
 
 type Article = { law_name: string; article_no: string; chapter_path: string; content: string; score?: number };
 type Sentence = { text: string; cite: string };
 type Step = { name: string; cite: string; detail: string; condition?: string };
 type Verdict = { idx: number; verdict: 'SUPPORTED' | 'PARTIAL' | 'UNSUPPORTED'; reason: string; quote?: string };
-type PastQA = { q: string; sentences: Sentence[]; verdicts: Verdict[]; score: number | null; refuse: string };
 
 const SAMPLES = [
   '加班費怎麼算才合法？',
@@ -56,14 +53,6 @@ function markQuote(content: string, quote?: string) {
 }
 
 export default function AskPage() {
-  return (
-    <Suspense>
-      <AskConsole />
-    </Suspense>
-  );
-}
-
-function AskConsole() {
   const [q, setQ] = useState('');
   const [stage, setStage] = useState(0); // 0 待命 1 檢索 2 生成 3 驗證 4 完成
   const [articles, setArticles] = useState<Article[]>([]);
@@ -76,9 +65,6 @@ function AskConsole() {
   const [refuse, setRefuse] = useState('');
   const [error, setError] = useState('');
   const [hl, setHl] = useState('');
-  const [traces, setTraces] = useState<{ text: string; thought?: boolean }[]>([]);
-  const [thread, setThread] = useState<PastQA[]>([]);
-  const [fromDiagnose, setFromDiagnose] = useState(false);
   const [glass, setGlass] = useState(false);
   const [ddOpen, setDdOpen] = useState<string>(''); // 展開時效面板的 cite
   const [ddDate, setDdDate] = useState('');
@@ -87,23 +73,16 @@ function AskConsole() {
   const sourceRefs = useRef<Record<string, HTMLDivElement | null>>({});
   const displayScore = useCountUp(score);
 
-  // 從案件診斷或首頁提問框導入
-  const searchParams = useSearchParams();
+  // 從案件診斷導入
   useEffect(() => {
     const dq = sessionStorage.getItem('lc_diagnose_q');
-    if (dq) { sessionStorage.removeItem('lc_diagnose_q'); setFromDiagnose(true); ask(dq); return; }
-    const uq = searchParams.get('q');
-    if (uq) ask(uq);
+    if (dq) { sessionStorage.removeItem('lc_diagnose_q'); ask(dq); }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   async function ask(question: string) {
     if (!question.trim() || busy) return;
-    // 把上一題收進歷史串
-    if (sentences.length > 0 || refuse) {
-      setThread((t) => [{ q, sentences, verdicts, score, refuse }, ...t].slice(0, 10));
-    }
-    setQ(question); setStage(1); setTraces([]);
+    setQ(question); setStage(1);
     setArticles([]); setSentences([]); setSteps([]); setVerdicts([]); setScore(null);
     setMeta(null); setCaveat(''); setRefuse(''); setError(''); setHl(''); setDdOpen(''); setLetterOpen(false);
     try {
@@ -125,8 +104,7 @@ function AskConsole() {
         for (const line of lines) {
           if (!line.trim()) continue;
           const ev = JSON.parse(line);
-          if (ev.type === 'trace') setTraces((t) => [...t, { text: ev.text, thought: ev.thought }]);
-          else if (ev.type === 'retrieval') { setArticles(ev.articles); setMeta({ categories: ev.categories ?? [], topScore: ev.topScore, condensed: ev.condensed }); setStage(2); }
+          if (ev.type === 'retrieval') { setArticles(ev.articles); setMeta({ categories: ev.categories ?? [], topScore: ev.topScore, condensed: ev.condensed }); setStage(2); }
           else if (ev.type === 'sentence') setSentences((s) => [...s, ev.sentence]);
           else if (ev.type === 'step') setSteps((s) => [...s, ev.step]);
           else if (ev.type === 'caveat') setCaveat(ev.text);
@@ -185,7 +163,6 @@ function AskConsole() {
         <a className="chip chip-link" href="/diagnose">不知道怎麼問？→ 案件診斷</a>
       </div>
 
-      {fromDiagnose && <span className="diag-note">此提問由案件診斷整理而成</span>}
       {stage > 0 && (
         <div className="stages" aria-live="polite">
           {['檢索條文', '生成回答', '逐句驗證'].map((name, i) => {
@@ -195,23 +172,11 @@ function AskConsole() {
           })}
         </div>
       )}
-      {traces.length > 0 && (
-        <div className="trace-panel" aria-live="polite">
-          {traces.map((t, i) => (
-            <span key={i} className={`trace-line ${t.thought ? 'thought' : ''}`}>{t.text}</span>
-          ))}
-          {busy && <span className="typing-dot">▍</span>}
-        </div>
-      )}
 
       {refuse && (
         <div className="refuse-card">
           <h2 className="refuse-title"><span>超出範圍</span>——本系統選擇不回答</h2>
           <p className="refuse-body">{refuse}</p>
-          <div className="refuse-actions">
-            <Link href="/diagnose" className="btn">改用案件診斷</Link>
-            <button type="button" className="chip" onClick={() => ask('房東不退押金怎麼辦？')}>看一個範例提問</button>
-          </div>
         </div>
       )}
       {error && (
@@ -241,8 +206,7 @@ function AskConsole() {
                   const dd = DEADLINES[s.cite];
                   return (
                     <span key={i} className={`sentence ${hl === s.cite ? 'hl' : ''}`}
-                      onMouseEnter={() => hoverCite(s.cite)} onMouseLeave={() => setHl('')}
-                      onClick={() => (hl === s.cite ? setHl('') : hoverCite(s.cite))}>
+                      onMouseEnter={() => hoverCite(s.cite)} onMouseLeave={() => setHl('')}>
                       {s.text}
                       <span className={`badge flip ${b ? b.cls : 'badge-wait'}`} key={v ? 'v' + i : 'w' + i}>
                         {s.cite}｛{b ? b.label : '驗證中'}｝
@@ -308,8 +272,7 @@ function AskConsole() {
               return (
                 <div key={cite + a.content.slice(0, 12)}
                   ref={(el) => { sourceRefs.current[cite] = el; }}
-                  className={`source-card ${hl === cite ? 'hl' : ''}`}
-                  onClick={() => setHl(hl === cite ? '' : cite)}>
+                  className={`source-card ${hl === cite ? 'hl' : ''}`}>
                   <div className="source-head">
                     <span className="source-cite">{a.law_name} {a.article_no}</span>
                     {typeof a.score === 'number' && a.score < 1 && (
@@ -333,33 +296,6 @@ function AskConsole() {
 
       {letterOpen && (
         <LetterModal question={q} articles={verifiedArticles} onClose={() => setLetterOpen(false)} />
-      )}
-
-      {thread.length > 0 && (
-        <div className="thread">
-          <p className="thread-title">本次的其他提問</p>
-          {thread.map((p, i) => (
-            <details key={i}>
-              <summary>
-                <span>{p.q}</span>
-                <span className="thread-score">{p.refuse ? '已拒答' : p.score !== null ? `可信度 ${p.score}/100` : ''}</span>
-              </summary>
-              <div className="thread-body">
-                {p.refuse && <p style={{ color: 'var(--muted)' }}>{p.refuse}</p>}
-                {p.sentences.map((s2, j) => {
-                  const v = p.verdicts.find((v) => v.idx === j);
-                  const b = v ? BADGE[v.verdict] : null;
-                  return (
-                    <span className="thread-s" key={j}>
-                      {s2.text}
-                      {b && <span className={`badge ${b.cls}`}>{s2.cite}｛{b.label}｝</span>}
-                    </span>
-                  );
-                })}
-              </div>
-            </details>
-          ))}
-        </div>
       )}
     </main>
   );
