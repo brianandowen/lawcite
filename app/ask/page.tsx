@@ -153,7 +153,7 @@ export default function AskPage() {
 
       <form className="ask-form" onSubmit={(e) => { e.preventDefault(); ask(q); }}>
         <input className="ask-input" value={q} onChange={(e) => setQ(e.target.value)}
-          placeholder="例如：房東不退押金怎麼辦？" maxLength={300} disabled={busy} />
+          placeholder="" maxLength={300} disabled={busy} />
         <button type="submit" className="btn btn-primary" disabled={busy}>{busy ? '處理中' : '提問'}</button>
       </form>
       <div className="chips">
