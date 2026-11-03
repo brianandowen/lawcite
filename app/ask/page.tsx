@@ -11,7 +11,6 @@ type Verdict = { idx: number; verdict: 'SUPPORTED' | 'PARTIAL' | 'UNSUPPORTED'; 
 type PastQA = { q: string; sentences: Sentence[]; verdicts: Verdict[]; score: number | null; refuse: string };
 
 const SAMPLES = [
-  '房東不退押金怎麼辦？',
   '加班費怎麼算才合法？',
   '網購後悔可以退貨嗎？',
   '收到交通罰單不服怎麼救濟？',
