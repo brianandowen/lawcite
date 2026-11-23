@@ -333,7 +333,8 @@ function DeadlinePanel({ cite, date, setDate }: { cite: string; date: string; se
 
   return (
     <span className="dd-panel" onMouseEnter={(e) => e.stopPropagation()}>
-      <span className="dd-from">{rule.from}：</span>
+      {/* 計算為「事件日 + N 天」＝自次日起算第 N 天；標籤請使用者輸入事件日本身，避免輸入次日而多算一天 */}
+      <span className="dd-from">{rule.from.endsWith('之次日') ? `${rule.from.slice(0, -3)}日期` : rule.from}：</span>
       <input type="date" className="dd-date" value={date} onChange={(e) => setDate(e.target.value)} />
       {deadline && (
         <span className="dd-result" style={{ color: tone }}>
