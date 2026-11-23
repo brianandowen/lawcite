@@ -8,9 +8,9 @@ type Step = { name: string; cite: string; detail: string; condition?: string };
 type Verdict = { idx: number; verdict: 'SUPPORTED' | 'PARTIAL' | 'UNSUPPORTED'; reason: string; quote?: string };
 
 const SAMPLES = [
-  '加班費怎麼算才合法？',
   '網購後悔可以退貨嗎？',
-  '收到交通罰單不服怎麼救濟？',
+  '加班費怎麼算才合法？',
+  '朋友欠錢不還怎麼辦？',
   '民法第184條在講什麼？',
 ];
 
