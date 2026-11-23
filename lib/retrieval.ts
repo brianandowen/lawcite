@@ -34,10 +34,14 @@ export type RetrievalResult = {
   kwCount?: number;
 };
 
-// 第一層：明確刑事字眼直接攔（本系統明訂排除刑事法）
-const CRIMINAL_RE = /(殺人|傷害罪|竊盜|強盜|搶奪|擄人|詐欺罪|侵占罪|背信罪|恐嚇|勒索|貪污|收賄|毒品|吸毒|販毒|性侵|強制猥褻|妨害性自主|縱火|偽造文書|判幾年|判多久|坐牢|關幾年|拘役|有期徒刑|無期徒刑|死刑|刑責|刑罰|刑事責任|構成要件.*罪|會不會被關)/;
+// 第一層：刑事問題直接攔（本系統明訂排除刑事法）
+// 問刑責／刑度的字眼一律攔；只出現犯罪行為字眼時，若同時是在問民事救濟（撤銷、賠償…）則放行
+const CRIMINAL_PENALTY_RE = /(判幾年|判多久|判刑|坐牢|關幾年|關多久|被關|拘役|有期徒刑|無期徒刑|死刑|刑責|刑罰|刑事責任|刑事處罰|構成要件.*罪|刑法第)/;
+const CRIMINAL_ACT_RE = /(殺人|傷害罪|竊盜|強盜|搶奪|擄人|詐欺罪|侵占罪|背信罪|恐嚇|勒索|貪污|收賄|毒品|吸毒|販毒|性侵|強制猥褻|妨害性自主|縱火|偽造文書)/;
+const CIVIL_REMEDY_RE = /(撤銷|賠償|慰撫金|不當得利|終止|解除|返還|退還|求償|資遣|租約)/;
 export function detectCriminal(q: string) {
-  return CRIMINAL_RE.test(q);
+  if (CRIMINAL_PENALTY_RE.test(q)) return true;
+  return CRIMINAL_ACT_RE.test(q) && !CIVIL_REMEDY_RE.test(q);
 }
 
 // ① 條號直達：解析「勞基法第24條」「民法第184條之1」這類字樣
