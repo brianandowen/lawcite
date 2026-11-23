@@ -22,12 +22,12 @@ function stripFence(s: string) {
   return s.replace(/```json\s*/g, '').replace(/```/g, '').trim();
 }
 
-async function openaiChat(system: string, user: string, json = true) {
+async function openaiChat(system: string, user: string, json = true, temperature = 0.2) {
   const res = await fetch('https://api.openai.com/v1/chat/completions', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${process.env.OPENAI_API_KEY}` },
     body: JSON.stringify({
-      model: OPENAI_MODEL(), temperature: 0.2,
+      model: OPENAI_MODEL(), temperature,
       ...(json ? { response_format: { type: 'json_object' } } : {}),
       messages: [{ role: 'system', content: system }, { role: 'user', content: user }],
     }),
@@ -213,7 +213,7 @@ const REWRITE_SYSTEM = `你是台灣法律檢索查詢改寫器。使用者的�
 移除人名代號、金額、日期等細節。只輸出 JSON：{"offtopic":false,"query":"...","keywords":["..."]}`;
 
 export async function rewriteQuery(question: string): Promise<{ query: string; keywords: string[]; offtopic: boolean }> {
-  const content = await openaiChat(REWRITE_SYSTEM, question);
+  const content = await openaiChat(REWRITE_SYSTEM, question, true, 0); // 改寫求穩定：temperature 0
   const parsed = JSON.parse(stripFence(content));
   return {
     offtopic: parsed.offtopic === true,

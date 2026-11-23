@@ -136,16 +136,18 @@ export async function retrieve(question: string): Promise<RetrievalResult> {
   const qEmb = embs[0];
   const qEmbRoute = needBoth ? embs[1] : embs[0];
   const qVec = JSON.stringify(qEmb);
+  const qVec2 = JSON.stringify(qEmbRoute); // 原始口語問題向量：改寫漂移時的保險（未改寫時與 qVec 相同）
 
   const categories = await routeCategories(qEmbRoute);
 
-  // 向量候選：全庫取前 30（領域路由改為加權，不再硬過濾，避免家事問題排除民法親屬編）
+  // 向量候選：全庫取前 40（領域路由改為加權，不再硬過濾，避免家事問題排除民法親屬編）
+  // 相似度取「改寫句」與「原始問題」兩個向量的較高者，降低改寫結果不穩定造成的漏撈
   const vecRows = (await db`
     SELECT law_name, article_no, chapter_path, content, category_name,
-           1 - (embedding <=> ${qVec}::vector) AS score
+           GREATEST(1 - (embedding <=> ${qVec}::vector), 1 - (embedding <=> ${qVec2}::vector)) AS score
     FROM articles
-    ORDER BY embedding <=> ${qVec}::vector
-    LIMIT 30`) as Candidate[];
+    ORDER BY LEAST(embedding <=> ${qVec}::vector, embedding <=> ${qVec2}::vector)
+    LIMIT 40`) as Candidate[];
 
   const topScore = vecRows.length ? Number(vecRows[0].score) : 0;
 
@@ -158,10 +160,10 @@ export async function retrieve(question: string): Promise<RetrievalResult> {
   if (kws.length > 0) {
     kwRows = (await db`
       SELECT law_name, article_no, chapter_path, content, category_name,
-             1 - (embedding <=> ${qVec}::vector) AS score
+             GREATEST(1 - (embedding <=> ${qVec}::vector), 1 - (embedding <=> ${qVec2}::vector)) AS score
       FROM articles
       WHERE content ILIKE ANY(${kws.map((k) => `%${k}%`)})
-      ORDER BY embedding <=> ${qVec}::vector
+      ORDER BY LEAST(embedding <=> ${qVec}::vector, embedding <=> ${qVec2}::vector)
       LIMIT 20`) as Candidate[];
   }
 
