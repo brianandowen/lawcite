@@ -227,7 +227,7 @@ const INTERVIEW_SYSTEM = `你是台灣法律諮詢的初談助理，負責在正
 最多問 5 題；資訊已足夠或已達 5 題時結束，並把全部事實濃縮成一段可供法規檢索的完整問題描述。
 只輸出 JSON：
 進行中 {"done":false,"question":"下一題","options":["選項1","選項2","選項3"],"allow_free_text":true}
-結束時 {"done":true,"summary":"濃縮後的完整問題描述（一段話，含關鍵事實）"}
+結束時 {"done":true,"summary":"濃縮後的完整問題描述（一段話，含關鍵事實，200 字內），最後必須以一個明確的法律問句結尾，例如「請問我可以依法向房東請求返還押金嗎？」"}
 options 給 2~4 個常見情況選項，涵蓋不了時使用者會自行輸入。`;
 
 export async function interviewNext(description: string, history: { q: string; a: string }[]) {
