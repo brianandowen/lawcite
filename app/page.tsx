@@ -2,6 +2,7 @@ import Link from 'next/link';
 import HeroStage from '@/components/HeroStage';
 import HeroAsk from '@/components/HeroAsk';
 import Ticker from '@/components/Ticker';
+import { SHOW_EXTRAS } from '@/lib/flags';
 import lawsMeta from '@/data/laws_meta.json';
 
 const totalArticles = (lawsMeta as { articles: number }[]).reduce((a, l) => a + l.articles, 0);
@@ -32,7 +33,7 @@ export default function Home() {
             AI 的每一句回答都附上依據條文，並由第二個模型逐句驗證。
           </p>
           <HeroAsk />
-          <Ticker />
+          {SHOW_EXTRAS && <Ticker />}
         </div>
       </HeroStage>
 

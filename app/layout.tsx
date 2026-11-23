@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import NavUser from '@/components/NavUser';
+import { SHOW_EXTRAS } from '@/lib/flags';
 import './globals.css';
 
 export const metadata: Metadata = {
@@ -29,7 +30,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             <Link href="/ask">提問</Link>
             <Link href="/diagnose">診斷</Link>
             <Link href="/browse">法規庫</Link>
-            <NavUser />
+            {SHOW_EXTRAS && <NavUser />}
           </div>
         </nav>
         {children}
@@ -39,7 +40,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           </p>
           <p className="footer-muted">
             本系統提供法規資訊檢索與整理，不構成法律意見。具體個案請諮詢律師或法律扶助基金會。
-            {' '}<Link href="/pulse">系統統計</Link>
+            {SHOW_EXTRAS && <>{' '}<Link href="/pulse">系統統計</Link></>}
           </p>
         </footer>
       </body>
