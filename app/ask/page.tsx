@@ -73,10 +73,18 @@ export default function AskPage() {
   const sourceRefs = useRef<Record<string, HTMLDivElement | null>>({});
   const displayScore = useCountUp(score);
 
-  // 從案件診斷導入
+  // 從案件診斷導入（優先）或首頁 ?q= 帶入；ref 防止開發模式 StrictMode 重複送出
+  const autoAsked = useRef(false);
   useEffect(() => {
+    if (autoAsked.current) return;
+    autoAsked.current = true;
     const dq = sessionStorage.getItem('lc_diagnose_q');
-    if (dq) { sessionStorage.removeItem('lc_diagnose_q'); ask(dq); }
+    if (dq) { sessionStorage.removeItem('lc_diagnose_q'); ask(dq.slice(0, 300)); return; }
+    const qp = new URLSearchParams(window.location.search).get('q');
+    if (qp) {
+      window.history.replaceState(null, '', '/ask'); // 重新整理不重送
+      ask(qp.slice(0, 300));
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
