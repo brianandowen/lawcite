@@ -209,14 +209,15 @@ const REWRITE_SYSTEM = `你是台灣法律檢索查詢改寫器。使用者的�
 例：「朋友欠錢不還」→「消費借貸借用人未依約返還借款之請求與給付遲延」
 例：「我的愛人佔用我的房間不搬走」→「所有物返還請求權與無權占有之排除遷讓」
 2. keywords：3~6 個「條文原文中會出現」的法律詞彙。例：["消費借貸","返還借款","給付遲延","催告","強制執行"]
-若問題與法律完全無關（天氣、美食、閒聊等），嚴禁強行法律化：直接回傳 {"query":"原問題原文","keywords":[]}。
-移除人名代號、金額、日期等細節。只輸出 JSON：{"query":"...","keywords":["..."]}`;
+若問題與法律完全無關（天氣、美食、閒聊等），嚴禁強行法律化：直接回傳 {"offtopic":true,"query":"","keywords":[]}。只要問題涉及任何權利義務、糾紛、契約、金錢、工作、租屋、家庭、政府處分或程序，就不是無關問題，offtopic 一律為 false。
+移除人名代號、金額、日期等細節。只輸出 JSON：{"offtopic":false,"query":"...","keywords":["..."]}`;
 
-export async function rewriteQuery(question: string): Promise<{ query: string; keywords: string[] }> {
+export async function rewriteQuery(question: string): Promise<{ query: string; keywords: string[]; offtopic: boolean }> {
   const content = await openaiChat(REWRITE_SYSTEM, question);
   const parsed = JSON.parse(stripFence(content));
   return {
-    query: (parsed.query as string) || question,
+    offtopic: parsed.offtopic === true,
+    query: (typeof parsed.query === 'string' && parsed.query.trim()) || question,
     keywords: Array.isArray(parsed.keywords) ? parsed.keywords.slice(0, 6) : [],
   };
 }

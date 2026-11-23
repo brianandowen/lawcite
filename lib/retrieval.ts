@@ -54,6 +54,28 @@ export function parseDirectCitations(question: string) {
   return hits;
 }
 
+// 合併排序參數：領域路由與關鍵詞只做加權，主排序仍是向量相似度
+const CATEGORY_BONUS = 0.03;
+const KEYWORD_BONUS = 0.015;
+const SCORE_GAP = 0.12; // 低於最高相似度此差距的候選直接捨棄
+
+type Candidate = RetrievedArticle & { category_name: string };
+
+// 同字異義排除：關鍵詞只出現在這些複合詞內時不算命中（如「催告」≠「公示催告」）
+const KEYWORD_EXCLUDE: Record<string, string[]> = {
+  催告: ['公示催告'],
+  送達: ['公示送達'],
+};
+function keywordHits(content: string, kws: string[]) {
+  let n = 0;
+  for (const k of kws) {
+    let c = content;
+    for (const ex of KEYWORD_EXCLUDE[k] ?? []) c = c.split(ex).join('');
+    if (c.includes(k)) n++;
+  }
+  return n;
+}
+
 // ② 領域路由：問題向量與四類領域描述向量比相似度，取相近的 1~2 類
 function dot(a: number[], b: number[]) {
   let s = 0;
@@ -94,6 +116,10 @@ export async function retrieve(question: string): Promise<RetrievalResult> {
   if (direct.length === 0) {
     try {
       const rw = await rewriteQuery(question);
+      // 改寫器判定與法律完全無關（且無關鍵詞）→ 直接拒答，不再浪費 embedding 與生成
+      if (rw.offtopic && rw.keywords.length === 0) {
+        return { articles: [], topScore: 0, categories: [], directHits: [], refused: true, refusedReason: 'offtopic' };
+      }
       if (rw.query && rw.query !== question) { searchText = rw.query; condensed = rw.query; }
       keywords = rw.keywords;
     } catch (e) { console.error('[rewrite]', e); }
@@ -109,35 +135,34 @@ export async function retrieve(question: string): Promise<RetrievalResult> {
 
   const categories = await routeCategories(qEmbRoute);
 
+  // 向量候選：全庫取前 30（領域路由改為加權，不再硬過濾，避免家事問題排除民法親屬編）
   const vecRows = (await db`
-    SELECT law_name, article_no, chapter_path, content,
+    SELECT law_name, article_no, chapter_path, content, category_name,
            1 - (embedding <=> ${qVec}::vector) AS score
     FROM articles
-    WHERE (${categories.length === 0} OR category_name = ANY(${categories}))
     ORDER BY embedding <=> ${qVec}::vector
-    LIMIT 8`) as RetrievedArticle[];
+    LIMIT 30`) as Candidate[];
 
   const topScore = vecRows.length ? Number(vecRows[0].score) : 0;
 
-  // 關鍵詞混合檢索：法律詞彙對條文全文精確比對，補回向量漏掉的條文
-  let kwRows: RetrievedArticle[] = [];
-  if (keywords.length > 0) {
-    const patterns = keywords
-      .map((k) => k.replace(/[%_\\]/g, ''))
-      .filter((k) => k.length >= 2)
-      .map((k) => `%${k}%`);
-    if (patterns.length > 0) {
-      kwRows = (await db`
-        SELECT law_name, article_no, chapter_path, content, NULL::float AS score
-        FROM articles
-        WHERE content ILIKE ANY(${patterns})
-        ORDER BY char_length(content) ASC
-        LIMIT 5`) as RetrievedArticle[];
-    }
+  // 關鍵詞候選：全文比對法律詞彙，但依「向量相似度」排序（不再用條文長度）
+  const kws = keywords
+    .filter((k): k is string => typeof k === 'string')
+    .map((k) => k.replace(/[%_\\]/g, '').trim())
+    .filter((k) => k.length >= 2);
+  let kwRows: Candidate[] = [];
+  if (kws.length > 0) {
+    kwRows = (await db`
+      SELECT law_name, article_no, chapter_path, content, category_name,
+             1 - (embedding <=> ${qVec}::vector) AS score
+      FROM articles
+      WHERE content ILIKE ANY(${kws.map((k) => `%${k}%`)})
+      ORDER BY embedding <=> ${qVec}::vector
+      LIMIT 20`) as Candidate[];
   }
 
   let directRows: RetrievedArticle[] = [];
-  for (const d of direct) {
+  for (const d of direct.slice(0, 3)) {
     const r = (await db`
       SELECT law_name, article_no, chapter_path, content, 1.0 AS score
       FROM articles WHERE law_name = ${d.law_name} AND article_no = ${d.article_no}
@@ -145,15 +170,38 @@ export async function retrieve(question: string): Promise<RetrievalResult> {
     directRows = directRows.concat(r);
   }
 
-  // 合併：條號直達置頂 → 關鍵詞命中 → 向量結果；去重、總量上限 10
+  // 合併：條號直達置頂；其餘候選以「向量相似度 + 領域加權 + 關鍵詞加權」統一排序，
+  // 並濾掉相似度明顯偏低者（擋掉短條文、同字異義的關鍵詞誤命中）
+  const keyOf = (a: RetrievedArticle) => `${a.law_name}|${a.article_no}|${a.content.slice(0, 30)}`;
   const seen = new Set<string>();
   const merged: RetrievedArticle[] = [];
-  for (const a of [...directRows, ...kwRows, ...vecRows]) {
-    const key = `${a.law_name}|${a.article_no}|${a.content.slice(0, 30)}`;
-    if (seen.has(key)) continue;
-    seen.add(key);
-    merged.push({ ...a, score: a.score === null ? undefined : Number(a.score) });
+  for (const a of directRows) {
+    if (seen.has(keyOf(a))) continue;
+    seen.add(keyOf(a));
+    merged.push({ ...a, score: Number(a.score) });
+  }
+  const floor = topScore - SCORE_GAP;
+  const pool = new Map<string, { a: Candidate; adj: number; hits: number }>();
+  for (const a of [...vecRows, ...kwRows]) {
+    const k = keyOf(a);
+    if (seen.has(k) || pool.has(k)) continue;
+    const score = Number(a.score);
+    if (score < floor) continue;
+    const hits = keywordHits(a.content, kws);
+    const adj = score
+      + (categories.includes(a.category_name) ? CATEGORY_BONUS : 0)
+      + KEYWORD_BONUS * Math.min(hits, 3);
+    pool.set(k, { a, adj, hits });
+  }
+  const ranked = [...pool.values()].sort((x, y) => y.adj - x.adj);
+  let kwCount = 0;
+  for (const { a, hits } of ranked) {
     if (merged.length >= 10) break;
+    if (hits > 0) kwCount++;
+    merged.push({
+      law_name: a.law_name, article_no: a.article_no, chapter_path: a.chapter_path,
+      content: a.content, score: Number(a.score),
+    });
   }
 
   const refused = directRows.length === 0 && topScore < threshold;
@@ -161,6 +209,6 @@ export async function retrieve(question: string): Promise<RetrievalResult> {
     articles: merged, topScore, categories,
     directHits: direct.map((d) => d.law_name + d.article_no),
     refused, refusedReason: refused ? 'offtopic' : undefined, condensed,
-    kwCount: kwRows.length,
+    kwCount,
   };
 }
